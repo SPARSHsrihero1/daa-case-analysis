@@ -40,7 +40,7 @@ daa-case-analysis/
 
 ### Step 1 — Clone the repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/daa-case-analysis.git
+git clone https://github.com/SPARSHsrihero1/daa-case-analysis.git
 cd daa-case-analysis
 ```
 
