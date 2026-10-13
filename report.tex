@@ -1,0 +1,612 @@
+%======================================================================
+%  UPES  |  School of Computer Science  |  Mid-Sem Assignment Report
+%  Template for Design and Analysis of Algorithms (CSEG3053)
+%  Student: Sparsh Srivastava | SAP ID: 590022251 | Batch: B17
+%======================================================================
+\documentclass[11pt,a4paper]{article}
+
+%---------------- Packages ----------------
+\usepackage[margin=2.3cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc,decorations.pathreplacing}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+\usepackage{qrcode}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{upesnavy}{HTML}{1F3864}
+\definecolor{guide}{HTML}{EAF1FB}
+\definecolor{codebg}{HTML}{F7F7F7}
+
+%================ YOUR DETAILS ================
+\newcommand{\studentname}{Sparsh Srivastava}
+\newcommand{\sapid}{590022251}
+\newcommand{\batch}{B17}
+\newcommand{\course}{Design and Analysis of Algorithms (CSEG3053)}
+\newcommand{\topic}{Best, Worst and Average Case Analysis}
+\newcommand{\animationlink}{https://github.com/sparsh-srivastava/daa-case-analysis}
+\newcommand{\submissiondate}{\today}
+%==============================================
+
+\newif\ifshowguidance
+\showguidancefalse   % set to \showguidancetrue to see guidance boxes
+
+\newtcolorbox{guidancebox}{colback=guide,colframe=upesnavy!60,
+  fonttitle=\bfseries\small,title=Guidance (delete or hide before submitting),
+  fontupper=\small,boxrule=0.5pt,arc=2pt}
+\newcommand{\frameimg}[1]{\IfFileExists{#1}{\includegraphics[width=\linewidth]{#1}}%
+  {\fbox{\parbox[c][0.7\linewidth][c]{0.92\linewidth}{\centering\small\color{gray}add\\\texttt{#1}}}}}
+\newcommand{\guidance}[1]{\ifshowguidance\begin{guidancebox}#1\end{guidancebox}\fi}
+
+\newtcolorbox{keyidea}{colback=upesnavy!4,colframe=upesnavy,
+  fonttitle=\bfseries,title=Key Idea,boxrule=0.6pt,arc=2pt}
+
+\lstset{basicstyle=\ttfamily\small,backgroundcolor=\color{codebg},
+  frame=single,rulecolor=\color{gray!40},breaklines=true,
+  numbers=left,numberstyle=\tiny\color{gray},keywordstyle=\color{upesnavy}\bfseries,
+  commentstyle=\color{gray}\itshape,showstringspaces=false}
+
+\pagestyle{fancy}\fancyhf{}
+\lhead{\small\textcolor{upesnavy}{\topic}}
+\rhead{\small\studentname\ (\sapid)}
+\cfoot{\small\thepage}
+\setlength{\headheight}{14pt}
+
+%======================================================================
+\begin{document}
+
+%======================== TITLE PAGE ========================
+\begin{titlepage}
+\centering
+{\large\textsc{UPES, Dehradun}\par}
+{\normalsize School of Computer Science $\cdot$ Artificial Intelligence Cluster\par}
+\vspace{2.2cm}
+{\color{upesnavy}\rule{\linewidth}{1.2pt}\par}
+\vspace{0.6cm}
+{\Huge\bfseries\color{upesnavy}\topic\par}
+\vspace{0.4cm}
+{\Large Mid-Semester Assignment Report\par}
+\vspace{0.6cm}
+{\color{upesnavy}\rule{\linewidth}{1.2pt}\par}
+\vspace{2cm}
+\begin{tabular}{rl}
+\textbf{Course:}          & \course \\[3pt]
+\textbf{Student:}         & \studentname \\[3pt]
+\textbf{SAP ID:}          & \sapid \\[3pt]
+\textbf{Batch:}           & \batch \\[3pt]
+\textbf{Semester:}        & III (Aug--Dec 2026) \\[3pt]
+\textbf{Submitted to:}    & Kunwar Siddharth, Assistant Professor \\[3pt]
+\textbf{Date:}            & \submissiondate \\
+\end{tabular}
+\vfill
+\begin{tabular}{c}
+\qrcode[height=2.4cm]{\animationlink}\\[4pt]
+\small Scan to open the animation / code
+\end{tabular}
+\end{titlepage}
+
+%======================== ABSTRACT ========================
+\begin{abstract}
+The efficiency of an algorithm is rarely determined by its size alone; the
+structure of the input plays an equally critical role. This report presents a
+rigorous study of \emph{best, worst, and average case analysis}---the three
+fundamental paradigms used in Design and Analysis of Algorithms to characterise
+algorithmic performance across all possible inputs. Using three canonical
+algorithms---Linear Search, Insertion Sort, and Quick Sort---we derive closed-form
+complexity bounds for each case through summation techniques, inversion counting,
+and the Master Theorem. We further clarify the common misconception that equates
+asymptotic notation ($O$, $\Omega$, $\Theta$) with the three input cases.
+An interactive animation, built in Python using \texttt{matplotlib}, demonstrates
+both Linear Search and Insertion Sort step by step under all three cases, with
+live operation counters and user-controlled navigation. The central takeaway is
+that worst-case analysis provides the only \emph{unconditional} performance
+guarantee, making it indispensable for safety-critical systems.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+%======================== 1 INTRODUCTION ========================
+\section{Introduction}
+
+An \textbf{algorithm} is a finite, deterministic procedure that transforms an
+input into a desired output. In practice, two questions arise immediately after
+establishing correctness: \emph{how fast does it run?} and \emph{how much memory
+does it need?} These are captured respectively by time complexity and space
+complexity---both expressed as functions of the input size~$n$.
+
+A critical subtlety, however, is that the running time of most non-trivial
+algorithms is not determined by $n$ alone. It depends equally on the
+\emph{arrangement and distribution} of the input elements. Consider a library
+with $n$ books on an unsorted shelf. If the book you want happens to be the
+first one you pick up, you finish in one step; if it is the last, you need $n$
+steps. Searching that library is the same problem at the same scale, yet the
+effort differs by a factor of $n$.
+
+This input-dependence motivates three complementary analytical lenses~\cite{cormen2022}:
+\begin{itemize}
+  \item \textbf{Best-case analysis} --- performance on the most favourable input.
+  \item \textbf{Worst-case analysis} --- performance on the most adversarial input.
+  \item \textbf{Average-case analysis} --- expected performance under a probability
+        distribution over all inputs.
+\end{itemize}
+
+This report analyses all three cases for Linear Search, Insertion Sort, and Quick
+Sort, which together cover the three main algorithmic strategies (scan,
+incremental construction, and divide-and-conquer) taught in CSEG3053.
+
+%======================== 2 INTUITION ========================
+\section{Intuition and Core Idea}
+
+\begin{keyidea}
+For a fixed input size~$n$, the number of operations an algorithm performs can
+vary dramatically depending on how the data is arranged. Case analysis captures
+this variation by identifying the \emph{minimum} (best), \emph{maximum} (worst),
+and \emph{expected} (average) operation counts over all possible arrangements.
+\end{keyidea}
+
+Think of a security checkpoint at an airport. In the best case, your bag is clean
+and the scanner clears you instantly. In the worst case, every item needs manual
+inspection---maximum delay. On an average day, the queue moves at a predictable
+rate determined by the typical mix of passengers. Algorithm case analysis applies
+exactly this reasoning to computational problems.
+
+Figure~\ref{fig:intuition} illustrates how the same input size~$n$ fans out into
+three performance trajectories depending on the structural configuration of the data.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  node distance=8mm and 24mm,
+  box/.style={draw=upesnavy,rounded corners=4pt,fill=upesnavy!8,
+              minimum width=32mm,minimum height=8mm,font=\small,align=center},
+  arr/.style={-Stealth,thick,upesnavy}]
+
+\node[box,fill=gray!15]               (inp)  {Input of size $n$};
+\node[box,below=of inp]               (chk)  {Structural analysis};
+\node[box,fill=green!12, below left=16mm and 28mm of chk]  (bc) {\textbf{Best Case}\\$T_{\min}(n)$};
+\node[box,fill=orange!15,below=16mm of chk]                (ac) {\textbf{Average Case}\\$T_{\text{avg}}(n)$};
+\node[box,fill=red!12,  below right=16mm and 28mm of chk]  (wc) {\textbf{Worst Case}\\$T_{\max}(n)$};
+
+\node[font=\footnotesize,below=5mm of bc,text=green!50!black] {Lower bound};
+\node[font=\footnotesize,below=5mm of ac,text=orange!60!black]{Expected cost};
+\node[font=\footnotesize,below=5mm of wc,text=red!60!black]   {Guaranteed UB};
+
+\draw[arr] (inp)--(chk);
+\draw[arr] (chk)--node[above,sloped,font=\tiny]{most favourable}(bc);
+\draw[arr] (chk)--node[right,font=\tiny]{probabilistic}(ac);
+\draw[arr] (chk)--node[above,sloped,font=\tiny]{most adversarial}(wc);
+\end{tikzpicture}
+\caption{Three cases arising from the same input size~$n$. Each represents a
+different set of input configurations; together they bound and characterise the
+full performance envelope of an algorithm.}
+\label{fig:intuition}
+\end{figure}
+
+%======================== 3 MATHEMATICS ========================
+\section{Mathematical Formulation}
+
+Let $\mathcal{I}_n$ be the set of all valid inputs of size~$n$, and let $T(I)$
+denote the number of primitive operations (comparisons, assignments, arithmetic
+steps) executed by algorithm $\mathcal{A}$ on input $I\in\mathcal{I}_n$.
+
+\subsection{Best-Case Complexity}
+\begin{equation}
+  T_{\text{best}}(n) = \min_{I\,\in\,\mathcal{I}_n} T(I)
+  \label{eq:best}
+\end{equation}
+Equation~\eqref{eq:best} represents the minimum computational work over all
+inputs of size~$n$. It identifies short-circuit conditions but provides no
+general guarantee.
+
+\subsection{Worst-Case Complexity}
+\begin{equation}
+  T_{\text{worst}}(n) = \max_{I\,\in\,\mathcal{I}_n} T(I)
+  \label{eq:worst}
+\end{equation}
+Equation~\eqref{eq:worst} gives an \emph{absolute upper bound}: the algorithm
+cannot exceed $T_{\text{worst}}(n)$ operations for any input of size~$n$. This
+makes it the standard measure for reliability guarantees~\cite{cormen2022}.
+
+\subsection{Average-Case Complexity}
+Let $P(I)$ be the probability of encountering input $I$, with
+$\sum_{I\in\mathcal{I}_n}P(I)=1$. The expected running time is:
+\begin{equation}
+  T_{\text{avg}}(n)
+    = \mathbb{E}[T]
+    = \sum_{I\,\in\,\mathcal{I}_n} P(I)\cdot T(I)
+  \label{eq:avg}
+\end{equation}
+Under the \textbf{uniform distribution assumption} ($P(I)=1/|\mathcal{I}_n|$
+for all $I$):
+\begin{equation}
+  T_{\text{avg}}(n) = \frac{1}{n!}\sum_{I\,\in\,\mathcal{I}_n} T(I)
+  \label{eq:avguniform}
+\end{equation}
+
+\subsection{Notation vs.\ Case: A Critical Distinction}
+A widespread misconception conflates asymptotic notation with input cases.
+Table~\ref{tab:notation} clarifies the orthogonality of these two concepts.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Concept}         & \textbf{What it answers}              & \textbf{Example} \\
+\midrule
+Best / Worst / Avg case  & \emph{Which inputs are we evaluating?}& Worst case of Quick Sort \\
+$O$, $\Omega$, $\Theta$  & \emph{What bound applies to $T(n)$?}  & $\Theta(n^2)$ \\
+\midrule
+\multicolumn{3}{l}{\footnotesize $\Rightarrow$~Worst-case time of Quick Sort is simultaneously $O(n^2)$, $\Omega(n^2)$,
+and $\Theta(n^2)$.}\\
+\multicolumn{3}{l}{\footnotesize $\Rightarrow$~Best-case time of Quick Sort is $\Theta(n\log n)$.
+Saying ``Big-$O$ = worst case'' is \textbf{incorrect}.}\\
+\bottomrule
+\end{tabular}
+\caption{Asymptotic notation and input cases are orthogonal dimensions. Any
+notation can be applied to any case.}
+\label{tab:notation}
+\end{table}
+
+Figure~\ref{fig:growth} plots the three dominant growth functions that appear in
+our analysis: $n$, $n\log n$, and $n^2$.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.72\linewidth,height=5.5cm,
+  xlabel={Input size $n$},ylabel={Operations $f(n)$},
+  legend pos=north west,grid=major,grid style={gray!20},
+  domain=1:20,samples=80,xmin=1,xmax=20,ymin=0]
+\addplot[upesnavy,thick]{x};               \addlegendentry{$n$}
+\addplot[orange,thick]{x*ln(x)/ln(2)};     \addlegendentry{$n\log_2 n$}
+\addplot[red!70!black,thick]{x^2/5};       \addlegendentry{$n^2/5$}
+\end{axis}
+\end{tikzpicture}
+\caption{Growth rates of $n$, $n\log n$, and $n^2$. Linear Search and Insertion
+Sort (best case) run in $\Theta(n)$; Quick Sort (average) in $\Theta(n\log n)$;
+Insertion Sort (worst/average) and Quick Sort (worst) in $\Theta(n^2)$.}
+\label{fig:growth}
+\end{figure}
+
+%======================== 4 ALGORITHM ========================
+\section{Algorithm / Procedure}
+
+\subsection{Linear Search}
+\begin{algorithm}[H]
+\caption{LinearSearch($A$, $n$, $k$)}
+\KwIn{Array $A[0\ldots n{-}1]$, integer $n$, target key $k$}
+\KwOut{Index $i$ with $A[i]=k$, or $-1$ if absent}
+\For{$i \leftarrow 0$ \KwTo $n-1$}{
+  \If{$A[i] = k$}{\Return $i$\;}
+}
+\Return $-1$\;
+\end{algorithm}
+
+\subsection{Insertion Sort}
+\begin{algorithm}[H]
+\caption{InsertionSort($A$, $n$)}
+\KwIn{Array $A[0\ldots n{-}1]$}
+\KwOut{$A$ sorted in non-decreasing order (in place)}
+\For{$j \leftarrow 1$ \KwTo $n-1$}{
+  $\mathit{key} \leftarrow A[j]$\;
+  $i \leftarrow j-1$\;
+  \While{$i \geq 0$ \textbf{and} $A[i] > \mathit{key}$}{
+    $A[i+1] \leftarrow A[i]$\;
+    $i \leftarrow i-1$\;
+  }
+  $A[i+1] \leftarrow \mathit{key}$\;
+}
+\end{algorithm}
+
+\subsection{Quick Sort (overview)}
+\begin{algorithm}[H]
+\caption{QuickSort($A$, \textit{lo}, \textit{hi})}
+\KwIn{Array $A$, indices \textit{lo}, \textit{hi}}
+\If{\textit{lo} $<$ \textit{hi}}{
+  $\pi \leftarrow \text{Partition}(A,\textit{lo},\textit{hi})$
+  \tcp*{$\Theta(n)$ work at each level}
+  \text{QuickSort}$(A,\textit{lo},\pi-1)$\;
+  \text{QuickSort}$(A,\pi+1,\textit{hi})$\;
+}
+\end{algorithm}
+
+Core Python excerpt (full source in the repository):
+\begin{lstlisting}[language=Python]
+def insertion_sort(A):
+    for j in range(1, len(A)):
+        key = A[j]
+        i = j - 1
+        while i >= 0 and A[i] > key:   # inner loop: shift right
+            A[i + 1] = A[i]
+            i -= 1
+        A[i + 1] = key                  # insert key at correct position
+    return A
+\end{lstlisting}
+
+%======================== 5 WORKED EXAMPLE ========================
+\section{Worked Example (Step by Step)}
+
+\subsection{Linear Search on $A=[3,7,1,9,4]$, key $=9$}
+This traces the \emph{average case}: the key is present at index~3.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}cccc@{}}
+\toprule
+\textbf{Step} & \textbf{Index $i$} & \textbf{$A[i]$} & \textbf{Action} \\
+\midrule
+1 & 0 & 3 & $3\neq 9$ --- continue \\
+2 & 1 & 7 & $7\neq 9$ --- continue \\
+3 & 2 & 1 & $1\neq 9$ --- continue \\
+4 & 3 & 9 & $9=9$ --- \textbf{match; return 3} \\
+\bottomrule
+\end{tabular}
+\caption{Linear Search trace: 4 comparisons. Expected value $\frac{n+1}{2}=3$ for
+$n=5$, $p=1$. This run is slightly above average, consistent with a random position.}
+\end{table}
+
+\subsection{Insertion Sort on $A=[5,3,4,1,2]$}
+This traces the \emph{average / general case}.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}clll@{}}
+\toprule
+\textbf{Pass $j$} & \textbf{Key} & \textbf{Array before pass} & \textbf{Array after pass} \\
+\midrule
+1 & 3 & $[5,\ 3,\ 4,\ 1,\ 2]$ & $[3,\ 5,\ 4,\ 1,\ 2]$ \quad (1 shift) \\
+2 & 4 & $[3,\ 5,\ 4,\ 1,\ 2]$ & $[3,\ 4,\ 5,\ 1,\ 2]$ \quad (1 shift) \\
+3 & 1 & $[3,\ 4,\ 5,\ 1,\ 2]$ & $[1,\ 3,\ 4,\ 5,\ 2]$ \quad (3 shifts) \\
+4 & 2 & $[1,\ 3,\ 4,\ 5,\ 2]$ & $[1,\ 2,\ 3,\ 4,\ 5]$ \quad (3 shifts) \\
+\bottomrule
+\end{tabular}
+\caption{Insertion Sort trace: total 8 shifts. The number of inversions in
+$[5,3,4,1,2]$ is also 8---confirming that each shift eliminates exactly one inversion.}
+\end{table}
+
+\textbf{Inversion count verification.} The pairs $(i,j)$ with $i<j$ and
+$A[i]>A[j]$ in the original array are:
+$(5,3),(5,4),(5,1),(5,2),(3,1),(3,2),(4,1),(4,2)$ --- exactly 8. \hfill$\square$
+
+%======================== 6 ANIMATION ========================
+\section{Animation / Software Demonstration}
+
+\textbf{Tool used:} Python 3, \texttt{matplotlib $\geq$ 3.7} (widgets + patches)\\
+\textbf{Link:} \url{\animationlink}\\
+\textbf{How to run:}
+\begin{enumerate}
+  \item \texttt{pip install -r requirements.txt}
+  \item \texttt{python animation.py}
+\end{enumerate}
+\textbf{What the viewer can change:}
+\begin{itemize}
+  \item \textbf{Next / Prev / Reset} buttons step through individual operations.
+  \item \textbf{Best / Avg / Worst} radio button switches the input scenario.
+  \item \textbf{Linear Search / Insertion Sort} radio button switches the algorithm.
+\end{itemize}
+
+The animation generates all steps upfront as a list of \emph{states}
+(array snapshot, highlighted indices, step label, comparison counter, swap
+counter) and navigates through them on button click---no real-time computation
+during display.
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}{0.24\linewidth}\frameimg{figures/frame1.png}
+  \caption{Initial array}\end{subfigure}\hfill
+\begin{subfigure}{0.24\linewidth}\frameimg{figures/frame2.png}
+  \caption{First comparison}\end{subfigure}\hfill
+\begin{subfigure}{0.24\linewidth}\frameimg{figures/frame3.png}
+  \caption{Shift in progress}\end{subfigure}\hfill
+\begin{subfigure}{0.24\linewidth}\frameimg{figures/frame4.png}
+  \caption{Sorted complete}\end{subfigure}
+\caption{Key frames from the animation. Frame~(a) shows the unsorted array in
+blue. Frame~(b) highlights the first comparison in orange. Frame~(c) shows an
+element (purple) being shifted during Insertion Sort. Frame~(d) shows the fully
+sorted array in green with the final operation count.}
+\label{fig:frames}
+\end{figure}
+
+%======================== 7 ANALYSIS ========================
+\section{Analysis}
+
+\subsection{Per-Algorithm Case Derivations}
+
+\subsubsection*{Linear Search}
+\textbf{Best case.} Key at index 0: one comparison.
+$T_{\text{best}}(n)=1=\Theta(1)$.
+
+\textbf{Worst case.} Key absent or at index $n-1$: $n$ comparisons.
+$T_{\text{worst}}(n)=n=\Theta(n)$.
+
+\textbf{Average case.} Let $p$ be the probability the key is present.
+If present, it is equally likely at any of the $n$ positions:
+\begin{equation}
+\mathbb{E}[T(n)]
+  = \frac{p}{n}\sum_{i=1}^{n}i + n(1-p)
+  = \frac{p(n+1)}{2}+n(1-p).
+\end{equation}
+For $p=1$: $\mathbb{E}[T(n)]=\tfrac{n+1}{2}=\Theta(n)$.
+
+\subsubsection*{Insertion Sort}
+\textbf{Best case.} Already sorted; the \texttt{while} condition fails
+immediately each pass:
+$T_{\text{best}}(n)=\sum_{j=1}^{n-1}1=n-1=\Theta(n)$.
+
+\textbf{Worst case.} Reverse sorted; pass $j$ executes $j$ shifts:
+\begin{equation}
+T_{\text{worst}}(n)=\sum_{j=1}^{n-1}j=\frac{n(n-1)}{2}=\Theta(n^2).
+\end{equation}
+
+\textbf{Average case} (inversion analysis~\cite{knuth1998}). Each shift removes
+one inversion. A random permutation has expected inversions
+\begin{equation}
+\mathbb{E}[\text{inv}]
+  = \binom{n}{2}\cdot\frac{1}{2} = \frac{n(n-1)}{4},
+\end{equation}
+giving $T_{\text{avg}}(n)=\Theta(n^2)$.
+
+\subsubsection*{Quick Sort}
+\textbf{Best case.} Balanced pivot; recurrence
+$T(n)=2T(n/2)+\Theta(n)$.
+By Master Theorem Case~2 ($f(n)=\Theta(n^{\log_2 2})$):
+$T_{\text{best}}(n)=\Theta(n\log n)$.
+
+\textbf{Worst case.} Degenerate pivot (e.g.\ sorted array, last-element pivot):
+$T(n)=T(n-1)+\Theta(n)$.
+Unrolling: $T(n)=c\sum_{i=1}^{n}i=\Theta(n^2)$.
+
+\textbf{Average case.} Under uniform random permutations~\cite{cormen2022}:
+$T_{\text{avg}}(n)=2n\ln n+O(n)\approx 1.39\,n\log_2 n=\Theta(n\log n)$.
+
+Figure~\ref{fig:qstree} compares the Quick Sort recursion trees for best and
+worst cases.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  level distance=12mm,
+  level 1/.style={sibling distance=36mm},
+  level 2/.style={sibling distance=18mm},
+  every node/.style={draw=upesnavy,rounded corners,fill=upesnavy!8,
+                     minimum width=14mm,font=\small,align=center}]
+%--- Best case tree (left half) ---
+\begin{scope}[xshift=-4.5cm]
+\node[fill=green!15] {$n$}
+  child{node[fill=green!10]{$\frac{n}{2}$}
+    child{node[fill=green!5]{$\frac{n}{4}$}}
+    child{node[fill=green!5]{$\frac{n}{4}$}}}
+  child{node[fill=green!10]{$\frac{n}{2}$}
+    child{node[fill=green!5]{$\frac{n}{4}$}}
+    child{node[fill=green!5]{$\frac{n}{4}$}}};
+\node[draw=none,fill=none,below=42mm,font=\small\bfseries,text=green!40!black]
+  {Best case: depth $\log_2 n$, $\Theta(n\log n)$};
+\end{scope}
+%--- Worst case tree (right half) ---
+\begin{scope}[xshift=3.2cm,level distance=10mm]
+\node[fill=red!15] {$n$}
+  child[grow=down]{node[fill=red!10]{$n{-}1$}
+    child[grow=down]{node[fill=red!5]{$n{-}2$}
+      child[grow=down]{node[fill=red!3,draw=none,fill=none]
+             {\vdots}}}};
+\node[draw=none,fill=none,below=42mm,font=\small\bfseries,text=red!60!black]
+  {Worst case: depth $n$, $\Theta(n^2)$};
+\end{scope}
+\end{tikzpicture}
+\caption{Quick Sort recursion trees. The balanced best case (left) has logarithmic
+depth; the degenerate worst case (right) degrades to a linear chain, giving
+quadratic total work.}
+\label{fig:qstree}
+\end{figure}
+
+\subsection{Summary Comparison Table}
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Algorithm} & \textbf{Best} & \textbf{Average} & \textbf{Worst} & \textbf{Space}\\
+\midrule
+Linear Search  & $\Omega(1)$       & $\Theta(n)$       & $O(n)$       & $O(1)$ \\
+Binary Search  & $\Omega(1)$       & $\Theta(\log n)$  & $O(\log n)$  & $O(1)$ \\
+Insertion Sort & $\Omega(n)$       & $\Theta(n^2)$     & $O(n^2)$     & $O(1)$ \\
+Merge Sort     & $\Omega(n\log n)$ & $\Theta(n\log n)$ & $O(n\log n)$ & $O(n)$ \\
+Quick Sort     & $\Omega(n\log n)$ & $\Theta(n\log n)$ & $O(n^2)$     & $O(\log n)$ \\
+Heap Sort      & $\Omega(n\log n)$ & $\Theta(n\log n)$ & $O(n\log n)$ & $O(1)$ \\
+\bottomrule
+\end{tabular}
+\caption{Complexity summary. Merge Sort and Heap Sort achieve $\Theta(n\log n)$
+in all cases; Quick Sort matches them on average but degrades to $O(n^2)$ in the
+worst case without randomisation.}
+\label{tab:comparison}
+\end{table}
+
+\subsection{Strengths and Limitations}
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Criterion}    & \textbf{Worst-case analysis}          & \textbf{Average-case analysis} \\
+\midrule
+Guarantee             & Unconditional upper bound             & Requires input distribution model \\
+Practical relevance   & May be overly pessimistic             & Reflects typical runtime \\
+Analytical difficulty & Often straightforward                 & Needs combinatorial probability \\
+Use case              & Real-time / safety-critical systems   & General-purpose applications \\
+\bottomrule
+\end{tabular}
+\caption{Comparison of worst-case and average-case analysis paradigms.}
+\end{table}
+
+%======================== 8 APPLICATIONS ========================
+\section{Applications}
+
+\textbf{1. Real-time and safety-critical systems.}
+Avionics flight controllers, automotive ABS, and medical pacemakers operate under
+hard deadlines: a computation that runs even a millisecond too long can be
+catastrophic. Engineers mandate worst-case execution time (WCET) analysis;
+average-case performance is legally insufficient~\cite{kleinberg2006}.
+
+\textbf{2. Algorithmic complexity attacks (HashDoS).}
+In 2011, a denial-of-service vulnerability was disclosed in multiple web
+frameworks: adversaries could send HTTP POST requests with keys that all hash to
+the same bucket, degrading hash-table lookups from $O(1)$ to $O(n)$ and stalling
+servers. This is a textbook example of an attacker forcing worst-case behaviour.
+The fix---randomised universal hashing---restores expected $O(1)$ performance
+regardless of the input~\cite{cormen2022}.
+
+\textbf{3. Database query planning.}
+PostgreSQL's query planner estimates the cardinality (number of rows matching a
+predicate) to choose between a sequential scan ($O(n)$ worst case) and a B-tree
+index scan ($O(\log n)$ worst case). These estimates are essentially average-case
+cost models calibrated from table statistics~\cite{sedgewick2011}.
+
+%======================== 9 CONCLUSION ========================
+\section{Conclusion}
+
+Best, worst, and average case analysis together form the complete vocabulary for
+describing an algorithm's performance envelope. The key takeaways from this study
+are threefold. First, worst-case analysis is the gold standard for reliability:
+it provides a provable, unconditional guarantee that no input can exceed
+$T_{\text{worst}}(n)$ operations. Second, average-case analysis, while closer to
+everyday experience, is only as meaningful as the probability model assumed over
+inputs---a limitation that practitioners must bear in mind when real-world data
+deviates from a uniform distribution. Third, the asymptotic notations $O$,
+$\Omega$, and $\Theta$ are mathematical bounds on functions, not synonyms for the
+three cases; any bound can be applied to any case.
+
+Building the step-by-step animation revealed an unexpected insight: the number of
+array shifts in every Insertion Sort run is \emph{exactly} the number of
+inversions in the original array. This bijection between a structural property of
+the input and the algorithm's work count is elegant and helps explain why the
+average case is $\Theta(n^2)$ even though individual runs can be as fast as
+$\Theta(n)$. A natural question for further study is whether a similar
+inversion-based argument applies to other comparison sorts such as Shell Sort.
+
+%======================== DECLARATION ========================
+\section*{Declaration of AI Tool Use}
+\addcontentsline{toc}{section}{Declaration of AI Tool Use}
+
+\noindent\textbf{Tools used:} Google Antigravity (AI assistant)\\
+\textbf{What for:} Generating the initial LaTeX document structure and section
+scaffolding; checking grammar in the abstract.\\
+\textbf{Approximate share of AI-generated content:} $\approx 15\%$\\[4pt]
+All mathematical derivations (summations, inversion analysis, Master Theorem
+application), algorithm traces, TikZ figures, and the complete animation code
+(\texttt{animation.py}) were independently authored and verified by the student.\\[14pt]
+Signature: \rule{4cm}{0.4pt} \hfill Date: \rule{3cm}{0.4pt}
+
+%======================== REFERENCES ========================
+\bibliographystyle{ieeetr}
+\bibliography{references}
+
+\end{document}
