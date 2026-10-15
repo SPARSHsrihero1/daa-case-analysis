@@ -99,10 +99,10 @@
 \begin{abstract}
 The efficiency of an algorithm is rarely determined by its size alone; the
 structure of the input plays an equally critical role. This report presents a
-rigorous study of \emph{best, worst, and average case analysis}---the three
-fundamental paradigms used in Design and Analysis of Algorithms to characterise
-algorithmic performance across all possible inputs. Using three canonical
-algorithms---Linear Search, Insertion Sort, and Quick Sort---we derive closed-form
+detailed study of \emph{best, worst, and average case analysis}, which are the three
+fundamental paradigms used in Design and Analysis of Algorithms to evaluate
+algorithmic performance across all possible inputs. Using three standard
+algorithms (Linear Search, Insertion Sort, and Quick Sort), we derive closed-form
 complexity bounds for each case through summation techniques, inversion counting,
 and the Master Theorem. We further clarify the common misconception that equates
 asymptotic notation ($O$, $\Omega$, $\Theta$) with the three input cases.
@@ -123,7 +123,7 @@ An \textbf{algorithm} is a finite, deterministic procedure that transforms an
 input into a desired output. In practice, two questions arise immediately after
 establishing correctness: \emph{how fast does it run?} and \emph{how much memory
 does it need?} These are captured respectively by time complexity and space
-complexity---both expressed as functions of the input size~$n$.
+complexity, both expressed as functions of the input size~$n$.
 
 A critical subtlety, however, is that the running time of most non-trivial
 algorithms is not determined by $n$ alone. It depends equally on the
@@ -133,11 +133,11 @@ first one you pick up, you finish in one step; if it is the last, you need $n$
 steps. Searching that library is the same problem at the same scale, yet the
 effort differs by a factor of $n$.
 
-This input-dependence motivates three complementary analytical lenses~\cite{cormen2022}:
+This input-dependence motivates three standard approaches in algorithm analysis~\cite{cormen2022}:
 \begin{itemize}
-  \item \textbf{Best-case analysis} --- performance on the most favourable input.
-  \item \textbf{Worst-case analysis} --- performance on the most adversarial input.
-  \item \textbf{Average-case analysis} --- expected performance under a probability
+  \item \textbf{Best-case analysis}: Performance on the most favourable input configuration.
+  \item \textbf{Worst-case analysis}: Performance on the most adversarial input configuration.
+  \item \textbf{Average-case analysis}: Expected performance over an assumed probability
         distribution over all inputs.
 \end{itemize}
 
@@ -157,7 +157,7 @@ and \emph{expected} (average) operation counts over all possible arrangements.
 
 Think of a security checkpoint at an airport. In the best case, your bag is clean
 and the scanner clears you instantly. In the worst case, every item needs manual
-inspection---maximum delay. On an average day, the queue moves at a predictable
+inspection, causing maximum delay. On an average day, the queue moves at a predictable
 rate determined by the typical mix of passengers. Algorithm case analysis applies
 exactly this reasoning to computational problems.
 
@@ -346,10 +346,10 @@ This traces the \emph{average case}: the key is present at index~3.
 \toprule
 \textbf{Step} & \textbf{Index $i$} & \textbf{$A[i]$} & \textbf{Action} \\
 \midrule
-1 & 0 & 3 & $3\neq 9$ --- continue \\
-2 & 1 & 7 & $7\neq 9$ --- continue \\
-3 & 2 & 1 & $1\neq 9$ --- continue \\
-4 & 3 & 9 & $9=9$ --- \textbf{match; return 3} \\
+1 & 0 & 3 & $3\neq 9$ (no match, increment index) \\
+2 & 1 & 7 & $7\neq 9$ (no match, increment index) \\
+3 & 2 & 1 & $1\neq 9$ (no match, increment index) \\
+4 & 3 & 9 & $9=9$ (\textbf{match found; return index 3}) \\
 \bottomrule
 \end{tabular}
 \caption{Linear Search trace: 4 comparisons. Expected value $\frac{n+1}{2}=3$ for
@@ -372,12 +372,12 @@ This traces the \emph{average / general case}.
 \bottomrule
 \end{tabular}
 \caption{Insertion Sort trace: total 8 shifts. The number of inversions in
-$[5,3,4,1,2]$ is also 8---confirming that each shift eliminates exactly one inversion.}
+$[5,3,4,1,2]$ is also 8, which confirms that each shift eliminates exactly one inversion.}
 \end{table}
 
 \textbf{Inversion count verification.} The pairs $(i,j)$ with $i<j$ and
 $A[i]>A[j]$ in the original array are:
-$(5,3),(5,4),(5,1),(5,2),(3,1),(3,2),(4,1),(4,2)$ --- exactly 8. \hfill$\square$
+$(5,3),(5,4),(5,1),(5,2),(3,1),(3,2),(4,1),(4,2)$, which gives exactly 8 inversions. \hfill$\square$
 
 %======================== 6 ANIMATION ========================
 \section{Animation / Software Demonstration}
@@ -398,8 +398,7 @@ $(5,3),(5,4),(5,1),(5,2),(3,1),(3,2),(4,1),(4,2)$ --- exactly 8. \hfill$\square$
 
 The animation generates all steps upfront as a list of \emph{states}
 (array snapshot, highlighted indices, step label, comparison counter, swap
-counter) and navigates through them on button click---no real-time computation
-during display.
+counter) and navigates through them on button click, providing a clean interactive display.
 
 \begin{figure}[h]
 \centering
@@ -561,8 +560,8 @@ In 2011, a denial-of-service vulnerability was disclosed in multiple web
 frameworks: adversaries could send HTTP POST requests with keys that all hash to
 the same bucket, degrading hash-table lookups from $O(1)$ to $O(n)$ and stalling
 servers. This is a textbook example of an attacker forcing worst-case behaviour.
-The fix---randomised universal hashing---restores expected $O(1)$ performance
-regardless of the input~\cite{cormen2022}.
+The standard mitigation is randomized universal hashing, which restores expected $O(1)$
+performance regardless of the input data~\cite{cormen2022}.
 
 \textbf{3. Database query planning.}
 PostgreSQL's query planner estimates the cardinality (number of rows matching a
@@ -575,11 +574,11 @@ cost models calibrated from table statistics~\cite{sedgewick2011}.
 
 Best, worst, and average case analysis together form the complete vocabulary for
 describing an algorithm's performance envelope. The key takeaways from this study
-are threefold. First, worst-case analysis is the gold standard for reliability:
+are threefold. First, worst-case analysis is the standard for reliability:
 it provides a provable, unconditional guarantee that no input can exceed
 $T_{\text{worst}}(n)$ operations. Second, average-case analysis, while closer to
 everyday experience, is only as meaningful as the probability model assumed over
-inputs---a limitation that practitioners must bear in mind when real-world data
+inputs, which is an important limitation to keep in mind when real-world data
 deviates from a uniform distribution. Third, the asymptotic notations $O$,
 $\Omega$, and $\Theta$ are mathematical bounds on functions, not synonyms for the
 three cases; any bound can be applied to any case.
